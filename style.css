@@ -1,0 +1,28 @@
+body {
+  font-family: sans-serif;
+  text-align: center;
+  background: #111;
+  color: #eee;
+}
+
+#container {
+  position: relative;
+  display: inline-block;
+  margin-top: 20px;
+}
+
+video, canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+video {
+  display: none;
+}
+
+#status {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #9f9;
+}

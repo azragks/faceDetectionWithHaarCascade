@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Haarcascade Yüz/Göz Tespiti - Tarayıcı Demosu</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Haarcascade ile Yüz ve Göz Tespiti (Tamamen Tarayıcıda Çalışır)</h2>
+<p id="status">OpenCV.js yükleniyor...</p>
+
+<div id="container">
+  <video id="video" width="640" height="480" autoplay playsinline muted></video>
+  <canvas id="canvas" width="640" height="480"></canvas>
+</div>
+
+<!-- OpenCV.js CDN'den yükleniyor, npm/backend gerekmez -->
+<script async src="https://docs.opencv.org/4.x/opencv.js" onload="onOpenCvReady();"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
