@@ -2,6 +2,8 @@
 
 A fully client-side face and eye detection demo that runs entirely in the browser using **OpenCV.js** and Haar Cascade classifiers — no backend or server required.
 
+🔗 Live demo: https://azragks.github.io/faceDetectionWithHaarCascade/
+
 ## Features
 - Real-time face and eye detection from your webcam
 - Runs 100% in-browser (OpenCV.js loaded from CDN)
@@ -18,6 +20,8 @@ A fully client-side face and eye detection demo that runs entirely in the browse
 # Haarcascade ile Yüz ve Göz Tespiti (Tarayıcı Demosu)
 
 **OpenCV.js** ve Haarcascade sınıflandırıcıları kullanılarak tamamen tarayıcıda çalışan, sunucu gerektirmeyen bir yüz ve göz tespiti demosu.
+
+🔗 Canlı demo: https://azragks.github.io/faceDetectionWithHaarCascade/
 
 ## Özellikler
 - Web kamerasından gerçek zamanlı yüz ve göz tespiti
