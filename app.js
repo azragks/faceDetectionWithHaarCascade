@@ -61,6 +61,7 @@ function processVideo() {
     let point1 = new cv.Point(face.x, face.y);
     let point2 = new cv.Point(face.x + face.width, face.y + face.height);
     cv.rectangle(src, point1, point2, [255, 0, 0, 255], 2);
+    cv.putText(src, 'Yuz', new cv.Point(face.x, face.y - 8), cv.FONT_HERSHEY_SIMPLEX, 0.6, [255, 0, 0, 255], 2);
 
     let roiGray = gray.roi(face);
     let eyes = new cv.RectVector();
@@ -70,6 +71,7 @@ function processVideo() {
       let ep1 = new cv.Point(face.x + eye.x, face.y + eye.y);
       let ep2 = new cv.Point(face.x + eye.x + eye.width, face.y + eye.y + eye.height);
       cv.rectangle(src, ep1, ep2, [0, 255, 0, 255], 2);
+      cv.putText(src, 'Goz', new cv.Point(face.x + eye.x, face.y + eye.y - 4), cv.FONT_HERSHEY_SIMPLEX, 0.5, [0, 255, 0, 255], 1);
     }
     roiGray.delete();
     eyes.delete();
