@@ -2,23 +2,45 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Haarcascade Yüz/Göz Tespiti - Tarayıcı Demosu</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h2>Haarcascade ile Yüz ve Göz Tespiti</h2>
-<p id="status">OpenCV.js yükleniyor...</p>
-<p id="hint">(Kamera başlamazsa sayfayı yeniden yüklemeyi deneyin)</p>
+<div id="app">
 
-<div id="container">
-  <video id="video" width="640" height="480" autoplay playsinline muted></video>
-  <canvas id="canvas" width="640" height="480"></canvas>
-</div>
+  <header id="topbar">
+    <h1 id="label">Yüz ve Göz Tanıma</h1>
+    <p id="status">OpenCV.js yükleniyor...</p>
+    <p id="hint">(Kamera başlamazsa sayfayı yeniden yüklemeyi deneyin)</p>
+  </header>
 
-<div id="controls">
-  <button id="startBtn" disabled>Kamerayı Başlat</button>
-  <button id="stopBtn" disabled>Kamerayı Durdur</button>
+  <main id="main">
+
+    <aside id="sidebar">
+      <div class="btn-group">
+        <button id="startBtn" class="icon-btn" disabled title="Kamerayı Başlat">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <span class="btn-label">Başlat</span>
+      </div>
+
+      <div class="btn-group">
+        <button id="stopBtn" class="icon-btn" disabled title="Kamerayı Durdur">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
+        </button>
+        <span class="btn-label">Durdur</span>
+      </div>
+    </aside>
+
+    <div id="container">
+      <video id="video" width="640" height="480" autoplay playsinline muted></video>
+      <canvas id="canvas" width="640" height="480"></canvas>
+    </div>
+
+  </main>
+
 </div>
 
 <!-- app.js önce yüklenmeli ki onOpenCvReady tanımlı olsun; aksi halde opencv.js
