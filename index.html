@@ -9,15 +9,23 @@
 
 <h2>Haarcascade ile Yüz ve Göz Tespiti</h2>
 <p id="status">OpenCV.js yükleniyor...</p>
+<p id="hint">(Kamera başlamazsa sayfayı yeniden yüklemeyi deneyin)</p>
 
 <div id="container">
   <video id="video" width="640" height="480" autoplay playsinline muted></video>
   <canvas id="canvas" width="640" height="480"></canvas>
 </div>
 
+<div id="controls">
+  <button id="startBtn" disabled>Kamerayı Başlat</button>
+  <button id="stopBtn" disabled>Kamerayı Durdur</button>
+</div>
+
+<!-- app.js önce yüklenmeli ki onOpenCvReady tanımlı olsun; aksi halde opencv.js
+     önbellekten hızlı yüklenirse onload, fonksiyon tanımlanmadan tetiklenebilir -->
+<script src="app.js"></script>
 <!-- OpenCV.js CDN'den yükleniyor, npm/backend gerekmez -->
 <script async src="https://docs.opencv.org/4.x/opencv.js" onload="onOpenCvReady();"></script>
-<script src="app.js"></script>
 
 </body>
 </html>

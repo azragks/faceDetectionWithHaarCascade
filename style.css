@@ -8,7 +8,28 @@ body {
 #container {
   position: relative;
   display: inline-block;
+  width: 640px;
+  height: 480px;
   margin-top: 20px;
+}
+
+#startBtn, #stopBtn {
+  margin-top: 10px;
+  margin-right: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#startBtn:disabled, #stopBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+#hint {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #999;
 }
 
 video, canvas {

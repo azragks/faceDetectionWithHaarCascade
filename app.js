@@ -1,9 +1,20 @@
-let faceCascade, eyeCascade;
+let faceCascade, eyeCascade, profileCascade;
 let video = document.getElementById('video');
 let canvas = document.getElementById('canvas');
 let ctx = canvas.getContext('2d');
 let statusEl = document.getElementById('status');
+let startBtn = document.getElementById('startBtn');
+let stopBtn = document.getElementById('stopBtn');
 let streaming = false;
+
+startBtn.addEventListener('click', () => {
+  startBtn.disabled = true;
+  startCamera();
+});
+
+stopBtn.addEventListener('click', () => {
+  stopCamera();
+});
 
 function onOpenCvReady() {
   // Script indi ama WASM çalışma zamanı henüz hazır olmayabilir;
@@ -18,14 +29,17 @@ function loadModelsAndStart() {
   // XML modellerini sunucuya ihtiyaç duymadan OpenCV.js'in sanal dosya sistemine yüklüyoruz
   Promise.all([
     loadCascadeFile('haarcascade_frontalface_default.xml'),
-    loadCascadeFile('haarcascade_eye.xml')
+    loadCascadeFile('haarcascade_eye.xml'),
+    loadCascadeFile('haarcascade_profileface.xml')
   ]).then(() => {
     faceCascade = new cv.CascadeClassifier();
     faceCascade.load('haarcascade_frontalface_default.xml');
     eyeCascade = new cv.CascadeClassifier();
     eyeCascade.load('haarcascade_eye.xml');
-    statusEl.innerText = "Modeller yüklendi. Kamera izni isteniyor...";
-    startCamera();
+    profileCascade = new cv.CascadeClassifier();
+    profileCascade.load('haarcascade_profileface.xml');
+    statusEl.innerText = "Modeller yüklendi. Kamerayı başlatabilirsiniz.";
+    startBtn.disabled = false;
   }).catch(err => {
     statusEl.innerText = "Model dosyaları yüklenemedi: " + err.message;
   });
@@ -50,12 +64,27 @@ function startCamera() {
       video.srcObject = stream;
       video.play();
       streaming = true;
+      stopBtn.disabled = false;
       statusEl.innerText = "Çalışıyor.";
       requestAnimationFrame(processVideo);
     })
     .catch(err => {
+      startBtn.disabled = false;
       statusEl.innerText = "Kameraya erişilemedi: " + err.message;
     });
+}
+
+function stopCamera() {
+  streaming = false;
+  let stream = video.srcObject;
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+  }
+  video.srcObject = null;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  startBtn.disabled = false;
+  stopBtn.disabled = true;
+  statusEl.innerText = "Durduruldu.";
 }
 
 function processVideo() {
@@ -66,20 +95,44 @@ function processVideo() {
   let gray = new cv.Mat();
   cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
 
-  let faces = new cv.RectVector();
-  let msize = new cv.Size(0, 0);
-  faceCascade.detectMultiScale(gray, faces, 1.3, 5, 0, msize, msize);
+  let minSize = new cv.Size(30, 30);
+  let maxSize = new cv.Size(0, 0); // 0,0 = üst sınır yok
 
-  for (let i = 0; i < faces.size(); i++) {
-    let face = faces.get(i);
+  // Önden yüz tespiti
+  let faces = new cv.RectVector();
+  faceCascade.detectMultiScale(gray, faces, 1.1, 4, 0, minSize, maxSize);
+
+  // Sağa bakan yan profil
+  let profilesRight = new cv.RectVector();
+  profileCascade.detectMultiScale(gray, profilesRight, 1.1, 4, 0, minSize, maxSize);
+
+  // Sola bakan yan profil: görüntüyü yatayda çevirip aynı cascade ile tespit edip
+  // koordinatları geri çeviriyoruz (profil cascade'i sadece tek yöne bakıyor)
+  let grayFlipped = new cv.Mat();
+  cv.flip(gray, grayFlipped, 1);
+  let profilesLeftFlipped = new cv.RectVector();
+  profileCascade.detectMultiScale(grayFlipped, profilesLeftFlipped, 1.1, 4, 0, minSize, maxSize);
+
+  let allFaces = [];
+  for (let i = 0; i < faces.size(); i++) allFaces.push(faces.get(i));
+  for (let i = 0; i < profilesRight.size(); i++) allFaces.push(profilesRight.get(i));
+  for (let i = 0; i < profilesLeftFlipped.size(); i++) {
+    let p = profilesLeftFlipped.get(i);
+    allFaces.push({ x: gray.cols - p.x - p.width, y: p.y, width: p.width, height: p.height });
+  }
+  allFaces = mergeOverlappingRects(allFaces);
+
+  for (let i = 0; i < allFaces.length; i++) {
+    let face = allFaces[i];
     let point1 = new cv.Point(face.x, face.y);
     let point2 = new cv.Point(face.x + face.width, face.y + face.height);
     cv.rectangle(src, point1, point2, [255, 0, 0, 255], 2);
     cv.putText(src, 'Yuz', new cv.Point(face.x, face.y - 8), cv.FONT_HERSHEY_SIMPLEX, 0.6, [255, 0, 0, 255], 2);
 
-    let roiGray = gray.roi(face);
+    let faceRect = new cv.Rect(face.x, face.y, face.width, face.height);
+    let roiGray = gray.roi(faceRect);
     let eyes = new cv.RectVector();
-    eyeCascade.detectMultiScale(roiGray, eyes, 1.3, 5, 0, msize, msize);
+    eyeCascade.detectMultiScale(roiGray, eyes, 1.1, 4, 0, minSize, maxSize);
     for (let j = 0; j < eyes.size(); j++) {
       let eye = eyes.get(j);
       let ep1 = new cv.Point(face.x + eye.x, face.y + eye.y);
@@ -94,7 +147,32 @@ function processVideo() {
   cv.imshow(canvas, src);
   src.delete();
   gray.delete();
+  grayFlipped.delete();
   faces.delete();
+  profilesRight.delete();
+  profilesLeftFlipped.delete();
 
   requestAnimationFrame(processVideo);
+}
+
+// Frontal ve profil cascade'lerinden gelen çakışan kutucukları tekilleştirir
+// (aynı yüzü iki cascade birden yakaladığında çift kutu çizmemek için)
+function mergeOverlappingRects(rects) {
+  let result = [];
+  for (let rect of rects) {
+    let overlapsExisting = result.some(r => rectOverlap(r, rect) > 0.3);
+    if (!overlapsExisting) result.push(rect);
+  }
+  return result;
+}
+
+function rectOverlap(a, b) {
+  let x1 = Math.max(a.x, b.x);
+  let y1 = Math.max(a.y, b.y);
+  let x2 = Math.min(a.x + a.width, b.x + b.width);
+  let y2 = Math.min(a.y + a.height, b.y + b.height);
+  if (x2 <= x1 || y2 <= y1) return 0;
+  let intersection = (x2 - x1) * (y2 - y1);
+  let smaller = Math.min(a.width * a.height, b.width * b.height);
+  return intersection / smaller;
 }
